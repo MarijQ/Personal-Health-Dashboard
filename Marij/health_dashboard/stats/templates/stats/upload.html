@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload CSV File</title>
+</head>
+<body>
+    <h1>Upload CSV File</h1>
+
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="csv_file" accept=".csv">
+        <button type="submit">Upload</button>
+    </form>
+
+    {% if numerical_data %}
+        <h2>Statistical Results:</h2>
+        <table border="1">
+            <tr>
+                <th>Column</th>
+                <th>Mean</th>
+                <th>Median</th>
+                <th>Standard Deviation</th>
+            </tr>
+            {% for column in numerical_data %}
+                <tr>
+                    <td>{{ column.header }}</td>
+                    <td>{{ column.mean }}</td>
+                    <td>{{ column.median }}</td>
+                    <td>{{ column.std_dev }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% endif %}
+</body>
+</html>
