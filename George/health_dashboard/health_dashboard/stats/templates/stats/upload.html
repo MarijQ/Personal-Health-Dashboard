@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload CSV File & Google Fit Data</title>
+</head>
+<body>
+    <h1>Upload CSV File</h1>
+
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="csv_file" accept=".csv">
+        <button type="submit">Upload</button>
+    </form>
+
+    {% if numerical_data %}
+        <h2>Statistical Results:</h2>
+        <table border="1">
+            <tr>
+                <th>Metric</th>
+                <th>Mean</th>
+                <th>Standard Deviation</th>
+            </tr>
+            <tr>
+                <td>{{ numerical_data.header }}</td>
+                <td>{{ numerical_data.mean }}</td>
+                <td>{{ numerical_data.standard_deviation }}</td>
+            </tr>
+        </table>
+    {% endif %}
+
+    <h1>Google Fit Data</h1>
+    {% if steps %}
+        <ul>
+            {% for step in steps %}
+                <li>Steps: {{ step.value.0.intVal }} at {{ step.startTimeNanos }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No data available.</p>
+    {% endif %}
+</body>
+</html>
+
