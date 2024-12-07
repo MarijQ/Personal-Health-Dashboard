@@ -17,6 +17,7 @@ RUN pip install -r requirements.txt
 
 # Copy the rest of the application code
 COPY . /app/
+COPY ./stats/templates /app/stats/templates  
 
 # Expose port 8000 to the host
 EXPOSE 8000

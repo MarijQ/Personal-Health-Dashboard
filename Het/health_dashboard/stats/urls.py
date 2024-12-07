@@ -1,7 +1,8 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
 
 urlpatterns = [
-    path('', views.upload_csv, name='upload_csv'),  # Upload page
-    path('dash_app/', views.dash_app_view, name='dash_app'),  # Dash app page
+    path('', views.home, name='home'),  # Upload page
+    path('dash_app/', include('django_plotly_dash.urls')),  # Include Django Plotly Dash URLs
+    path('dash_app/', views.dash_app_view, name='dash_app'),  # Your custom view
 ]
