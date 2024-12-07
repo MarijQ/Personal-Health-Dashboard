@@ -1,7 +1,8 @@
 Django==5.1.2
 pandas==2.2.3
 matplotlib
-seaborn
-plotly-express
-dash
-flask
+seaborn==0.12.2
+plotly-express==0.4.1
+dash==2.18.2
+django-plotly-dash==2.4.3 
+flask==2.3.2
