@@ -1,0 +1,7 @@
+Django==5.1.2
+pandas==2.2.3
+matplotlib
+seaborn
+plotly-express
+dash
+flask
