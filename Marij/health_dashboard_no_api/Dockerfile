@@ -21,8 +21,5 @@ COPY . /app/
 # Expose port 8000 to the host
 EXPOSE 8000
 
-# Set an environment variable to allow OAuth over HTTP for local development
-ENV OAUTHLIB_INSECURE_TRANSPORT 1
-
 # Run the development server
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

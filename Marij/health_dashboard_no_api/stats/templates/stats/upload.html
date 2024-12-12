@@ -114,22 +114,17 @@
         <p>A personalized health data visualization and insights platform</p>
         <div id="content">
             <div id="chart-area">
-                <h2>Steps Data</h2>
-                {% if steps_data %}
-                    {{ steps_data|safe }}
-                {% else %}
-                    <p>No steps data available yet.</p>
-                {% endif %}
+                <h2>Charts Section</h2>
+                <div style="height: 500px; background-color: #bbb;">
+                    <p>Placeholder for charts</p>
+                </div>
             </div>
             <div id="sidebar">
                 <!-- Steps API Input Section -->
                 <section>
-                    <h2>Sync Steps via Google Fit</h2>
-                    <form method="POST" enctype="multipart/form-data" action="{% url 'upload_secret' %}">
-                        {% csrf_token %}
-                        <input type="file" name="client_secret" accept="application/json" required>
-                        <button type="submit">Upload and Authorize</button>
-                    </form>
+                    <h2>Sync Steps via API</h2>
+                    <input id="api-key" type="text" placeholder="Enter your API Key">
+                    <button onclick="alert('Steps API sync not implemented yet')">Sync Steps</button>
                 </section>
 
                 <!-- Sleep Data Upload Section -->
