@@ -9,14 +9,21 @@ import time
 import requests
 import pandas as pd
 from google_auth_oauthlib.flow import Flow
+from .models import UserSteps
 
 # Update with your scope
 SCOPES = ["https://www.googleapis.com/auth/fitness.activity.read"]
 
 
 def home(request):
-    steps_data = request.session.pop("steps_data", None)
-    return render(request, "stats/upload.html", {"steps_data": steps_data})
+    user_id = request.session.session_key or "anonymous_user"
+    steps_data = UserSteps.objects.filter(user_id=user_id).order_by('date')  # Query data from DB
+
+    # Convert queried data to HTML table (optional, for displaying in template)
+    steps_df = pd.DataFrame(list(steps_data.values("date", "steps")))
+    steps_table = steps_df.to_html(index=False) if not steps_df.empty else None
+
+    return render(request, "stats/upload.html", {"steps_data": steps_table})
 
 
 def upload_secret(request):
@@ -79,12 +86,14 @@ def oauth2callback(request):
         )
         flow.fetch_token(authorization_response=request.build_absolute_uri())
         credentials = flow.credentials
-        print("Credentials successfully fetched")
 
-        # Fetch steps data
-        steps_data = fetch_steps_data(credentials)
-        print(f"Steps data fetched to be displayed: {steps_data}")  # Debugging
-        request.session["steps_data"] = steps_data or "<p>No data fetched</p>"
+        # Use a session/user-specific ID for this example
+        user_id = request.session.session_key or "anonymous_user"
+
+        # Fetch and save steps data into the database
+        fetch_steps_data(credentials, user_id)
+        print("Steps data saved to database")
+        messages.success(request, "Steps data fetched and saved successfully!")
     except Exception as e:
         print(f"Error during OAuth callback: {e}")
         messages.error(request, f"Error during OAuth callback: {e}")
@@ -95,11 +104,10 @@ def oauth2callback(request):
     return redirect("home")
 
 
-def fetch_steps_data(credentials):
-    """Fetch steps data from Google Fit API."""
-    # Define specific date range
+def fetch_steps_data(credentials, user_id):
+    """Fetch steps data from Google Fit API and save unique entries to the database."""
     start_time_str = "2024-11-01"
-    end_time_str = "2024-11-14"
+    end_time_str = "2024-11-16"
 
     # Convert to milliseconds since epoch
     start_time_millis = int(time.mktime(time.strptime(start_time_str, "%Y-%m-%d")) * 1000)
@@ -117,11 +125,14 @@ def fetch_steps_data(credentials):
         "endTimeMillis": end_time_millis
     }
 
-    print(f"Requesting data from {start_time_str} to {end_time_str}...")
     response = requests.post(url, headers=headers, json=body)
     if response.status_code == 200:
         data = response.json()
-        steps_list = []
+        steps_to_create = []
+        existing_dates = set(
+            UserSteps.objects.filter(user_id=user_id).values_list("date", flat=True)
+        )  # Get all existing dates for this user
+
         for bucket in data.get('bucket', []):
             start_time = int(bucket['startTimeMillis']) // 1000
             date = time.strftime('%Y-%m-%d', time.gmtime(start_time))
@@ -130,11 +141,14 @@ def fetch_steps_data(credentials):
                 for dataset in bucket.get('dataset', [])
                 for point in dataset.get('point', [])
             )
-            steps_list.append({'date': date, 'steps': steps})
+            # Only add to list if date doesn't already exist in the database
+            if date not in existing_dates:
+                steps_to_create.append(UserSteps(user_id=user_id, date=date, steps=steps))
 
-        df = pd.DataFrame(steps_list)
-        print(f"Steps data processed: {steps_list}")  # Debugging
-        return df.to_html(index=False)
+        # Bulk insert non-duplicate entries
+        UserSteps.objects.bulk_create(steps_to_create, ignore_conflicts=True)
+        print(f"Steps successfully saved for user: {user_id}")
     else:
         print(f"Google Fit API error: {response.status_code} - {response.text}")
-        return f"<p>Error fetching data: {response.status_code} - {response.text}</p>"
+        raise Exception(f"Error fetching data: {response.status_code} - {response.text}")
+

@@ -1,2 +1,11 @@
+# build container
 docker build -t app-project-marij .
+
+# run server with file sync
 docker run -p 8000:8000 -v "$(pwd):/app" app-project-marij
+
+# enter docker terminal
+docker exec -it trusting_johnson /bin/sh
+
+# enter sql terminal
+python manage.py dbshell
