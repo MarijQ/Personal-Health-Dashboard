@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -69,9 +68,7 @@
             background-color: #0056b3;
         }
 
-        input[type="file"],
-        input[type="text"],
-        input[type="number"] {
+        input[type="file"], input[type="text"], input[type="number"] {
             width: 100%;
             padding: 5px;
             margin-bottom: 10px;
@@ -111,7 +108,6 @@
         }
     </style>
 </head>
-
 <body>
     <div id="main">
         <h1>Health Dashboard</h1>
@@ -120,9 +116,9 @@
             <div id="chart-area">
                 <h2>Steps Data</h2>
                 {% if steps_data %}
-                {{ steps_data|safe }}
+                    {{ steps_data|safe }}
                 {% else %}
-                <p>No steps data available yet.</p>
+                    <p>No steps data available yet.</p>
                 {% endif %}
             </div>
             <div id="sidebar">
@@ -145,7 +141,7 @@
                         <button type="submit">Upload and Sync</button>
                     </form>
                     {% if error %}
-                    <p style="color: red;">{{ error }}</p>
+                        <p style="color: red;">{{ error }}</p>
                     {% endif %}
                 </section>
 
@@ -170,67 +166,49 @@
 
     <!-- AI Insights Section -->
     <div id="ai-insights">
-        <div id="openrouter-setup">
-            <h4>OpenRouter API Setup</h4>
-            <form method="POST" action="{% url 'set_api_key' %}">
-                {% csrf_token %}
-                <input type="password" name="api_key" placeholder="Enter OpenRouter API Key" required>
-                <button type="submit">Activate</button>
-            </form>
-            <small>* Your key will be securely stored during this session.</small>
-            {% if api_key %}
-            <p><strong>API Key active</strong></p>
-            {% else %}
-            <p style="color: red;">No API Key configured. Activate to use AI Insights.</p>
-            {% endif %}
-        </div>
-
         <div id="chat-input">
-            <h4>Ask AI Insights</h4>
-            <textarea id="ai-prompt"
-                placeholder="Ask a question (e.g., 'Summarize my weekly health insights')"></textarea>
+            <textarea id="ai-prompt" placeholder="Ask a question (e.g., 'Summarize my weekly health insights')"></textarea>
             <button onclick="getAIResponse()">Get Insights</button>
         </div>
         <div id="chat-output">
             <h4>LLM Response</h4>
-            <div id="ai-output"
-                style="padding: 10px; background-color: #fff; border: 1px solid #ccc; height: 100px; overflow-y: auto;">
+            <div id="ai-output" style="padding: 10px; background-color: #fff; border: 1px solid #ccc; height: 100px; overflow-y: auto;">
                 <!-- AI response will display here -->
             </div>
         </div>
     </div>
 
     <script>
+        const weightList = document.getElementById('manual-weight-list');
+
+        function addWeightInput(event) {
+            event.preventDefault();
+            const weightInput = document.getElementById('manual-weight').value;
+            if (weightInput) {
+                const li = document.createElement('li');
+                li.innerText = `${weightInput} kg`;
+                weightList.appendChild(li);
+                document.getElementById('manual-weight').value = '';
+            }
+        }
+
+        function removeLastWeight() {
+            if (weightList.lastChild) {
+                weightList.removeChild(weightList.lastChild);
+            }
+        }
+
         function getAIResponse() {
             const prompt = document.getElementById('ai-prompt').value;
             const output = document.getElementById('ai-output');
-            if (!prompt) {
+            if (prompt) {
+                // For now, just display a placeholder response
+                output.innerText = `Response to: "${prompt}" (LLM integration pending)`;
+                document.getElementById('ai-prompt').value = '';
+            } else {
                 output.innerText = 'Please enter a question.';
-                return;
             }
-
-            // Send the user prompt to the server via a POST request
-            fetch("{% url 'get_ai_response' %}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": "{{ csrf_token }}"
-                },
-                body: JSON.stringify({ prompt })
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        output.innerText = `Error: ${data.error}`;
-                    } else {
-                        output.innerText = data.response;
-                    }
-                })
-                .catch(err => {
-                    output.innerText = `Request failed: ${err}`;
-                });
         }
     </script>
 </body>
-
 </html>

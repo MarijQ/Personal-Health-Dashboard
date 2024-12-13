@@ -9,6 +9,3 @@ docker exec -it trusting_johnson /bin/sh
 
 # enter sql terminal
 python manage.py dbshell
-
-# openrouter test api key 
-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
