@@ -11,6 +11,7 @@ import time
 import requests
 import pandas as pd
 import json
+import sqlite3
 
 # Constants
 SCOPES = ["https://www.googleapis.com/auth/fitness.activity.read"]
@@ -18,29 +19,49 @@ API_KEY_FILE = os.path.join(settings.MEDIA_ROOT, "api_key.txt")
 SITE_URL = "http://localhost:8000"
 APP_NAME = "Health Dashboard"
 
+# ----------------------------------------------------------------------
+# General Views
+# ----------------------------------------------------------------------
+
 
 def home(request):
     """
-    Home view renders the main dashboard.
+    Handles the homepage view where user-specific steps data is retrieved
+    and optionally displayed in a table format.
     """
     user_id = request.session.session_key or "anonymous_user"
     steps_data = UserSteps.objects.filter(user_id=user_id).order_by("date")
+
+    # Convert data to a dataframe and optionally render as an HTML table
     steps_df = pd.DataFrame(list(steps_data.values("date", "steps")))
     steps_table = steps_df.to_html(index=False) if not steps_df.empty else None
 
-    return render(request, "stats/dashboard.html", {"steps_data": steps_table})
+    return render(request, "stats/upload.html", {"steps_data": steps_table})
+
+
+# ----------------------------------------------------------------------
+# Google Fit Integration
+# ----------------------------------------------------------------------
 
 
 def upload_secret(request):
+    """
+    Handles the upload of the `client_secret.json` file to initiate
+    the Google Fit OAuth flow.
+    """
     if request.method == "POST" and request.FILES.get("client_secret"):
         uploaded_file = request.FILES["client_secret"]
+
+        # Ensure temporary directory exists and save file
         tmp_dir = default_storage.path("tmp/")
         if not os.path.exists(tmp_dir):
             os.makedirs(tmp_dir)
+
         temp_secret_path = os.path.join(tmp_dir, "client_secret.json")
         with open(temp_secret_path, "wb") as f:
             f.write(uploaded_file.read())
 
+        # Start the authorization flow
         try:
             flow = Flow.from_client_secrets_file(
                 temp_secret_path,
@@ -56,13 +77,17 @@ def upload_secret(request):
             return redirect(authorization_url)
         except Exception as e:
             if os.path.exists(temp_secret_path):
-                os.remove(temp_secret_path)
+                os.remove(temp_secret_path)  # Clean-up on error
             return JsonResponse({"error": str(e)}, status=400)
 
     return redirect("home")
 
 
 def oauth2callback(request):
+    """
+    Handles the OAuth2 callback from Google Fit after user authorization.
+    Fetches steps data and stores it in the database.
+    """
     temp_secret_path = request.session.pop("temp_secret_path", None)
     state = request.session.pop("oauth_state", None)
 
@@ -79,6 +104,7 @@ def oauth2callback(request):
         flow.fetch_token(authorization_response=request.build_absolute_uri())
         credentials = flow.credentials
 
+        # Fetch steps data and save to database
         user_id = request.session.session_key or "anonymous_user"
         fetch_steps_data(credentials, user_id)
         messages.success(request, "Steps data fetched and saved successfully!")
@@ -92,8 +118,14 @@ def oauth2callback(request):
 
 
 def fetch_steps_data(credentials, user_id):
+    """
+    Fetches steps data from the Google Fit API and saves it to the database,
+    avoiding duplicate entries.
+    """
     start_time_str = "2024-11-01"
     end_time_str = "2024-11-16"
+
+    # Convert start and end times to milliseconds since epoch
     start_time_millis = int(
         time.mktime(time.strptime(start_time_str, "%Y-%m-%d")) * 1000
     )
@@ -108,7 +140,7 @@ def fetch_steps_data(credentials, user_id):
                 "dataSourceId": "derived:com.google.step_count.delta:com.google.android.gms:merge_step_deltas",
             }
         ],
-        "bucketByTime": {"durationMillis": 86400000},
+        "bucketByTime": {"durationMillis": 86400000},  # Daily aggregation
         "startTimeMillis": start_time_millis,
         "endTimeMillis": end_time_millis,
     }
@@ -141,7 +173,15 @@ def fetch_steps_data(credentials, user_id):
         )
 
 
+# ----------------------------------------------------------------------
+# AI Integration (OpenRouter)
+# ----------------------------------------------------------------------
+
+
 def set_api_key(request):
+    """
+    Saves the user's OpenRouter API key.
+    """
     if request.method == "POST":
         api_key = request.POST.get("api_key", "").strip()
         if not api_key:
@@ -156,6 +196,9 @@ def set_api_key(request):
 
 
 def get_stored_api_key():
+    """
+    Retrieves the stored OpenRouter API key from a file if available.
+    """
     if os.path.exists(API_KEY_FILE):
         with open(API_KEY_FILE, "r") as f:
             return f.read().strip()
@@ -163,6 +206,10 @@ def get_stored_api_key():
 
 
 def get_ai_response(request):
+    """
+    Generates an AI response using OpenRouter's API based on user input
+    and context retrieved from the database.
+    """
     if request.method == "POST":
         api_key = get_stored_api_key()
         if not api_key:
@@ -179,9 +226,11 @@ def get_ai_response(request):
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON input."}, status=400)
 
+        # Fetch context data for AI interaction
         sqlite_data = fetch_steps_context()
         full_prompt = f"User Question: {prompt}\n\nUser Data:\n{sqlite_data}"
 
+        # Send request to OpenRouter
         try:
             headers = {
                 "Authorization": f"Bearer {api_key}",
@@ -217,6 +266,9 @@ def get_ai_response(request):
 
 
 def fetch_steps_context():
+    """
+    Extracts formatted steps data from the database for use in prompt generation.
+    """
     steps = UserSteps.objects.all().order_by("user_id", "date")
     context = [f"{step.user_id} - {step.date}: {step.steps} steps" for step in steps]
     return "\n".join(context)
