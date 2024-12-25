@@ -1,0 +1,154 @@
+from django.shortcuts import render, redirect
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from django.conf import settings
+from django.contrib import messages
+from django.http import JsonResponse
+import os
+import time
+import requests
+import pandas as pd
+from google_auth_oauthlib.flow import Flow
+from .models import UserSteps
+
+# Update with your scope
+SCOPES = ["https://www.googleapis.com/auth/fitness.activity.read"]
+
+
+def home(request):
+    user_id = request.session.session_key or "anonymous_user"
+    steps_data = UserSteps.objects.filter(user_id=user_id).order_by('date')  # Query data from DB
+
+    # Convert queried data to HTML table (optional, for displaying in template)
+    steps_df = pd.DataFrame(list(steps_data.values("date", "steps")))
+    steps_table = steps_df.to_html(index=False) if not steps_df.empty else None
+
+    return render(request, "stats/upload.html", {"steps_data": steps_table})
+
+
+def upload_secret(request):
+    print("upload_secret triggered")
+
+    if request.method == "POST" and request.FILES.get("client_secret"):
+        uploaded_file = request.FILES["client_secret"]
+
+        # Ensure the tmp directory exists before saving the file
+        tmp_dir = default_storage.path("tmp/")
+        if not os.path.exists(tmp_dir):
+            os.makedirs(tmp_dir)
+            print(f"Created directory: {tmp_dir}")
+
+        temp_secret_path = os.path.join(tmp_dir, "client_secret.json")
+        with open(temp_secret_path, "wb") as f:
+            f.write(uploaded_file.read())
+        print(f"File uploaded and saved to {temp_secret_path}")
+
+        # Start the authorization flow
+        try:
+            flow = Flow.from_client_secrets_file(
+                temp_secret_path,
+                scopes=SCOPES,
+                redirect_uri="http://localhost:8000/oauth2callback",  # Update this if running remotely
+            )
+            authorization_url, state = flow.authorization_url(
+                access_type="offline", include_granted_scopes="true"
+            )
+            request.session["oauth_state"] = state
+            print(f"Redirecting to authorization URL: {authorization_url}")
+
+            request.session["temp_secret_path"] = temp_secret_path
+            return redirect(authorization_url)
+        except Exception as e:
+            print(f"Error in upload_secret: {e}")
+            if os.path.exists(temp_secret_path):
+                os.remove(temp_secret_path)  # Cleanup if there's an error
+            return JsonResponse({"error": str(e)}, status=400)
+
+    print("No file uploaded or wrong HTTP method")
+    return redirect("home")
+
+
+def oauth2callback(request):
+    print("oauth2callback triggered")
+    temp_secret_path = request.session.pop("temp_secret_path", None)
+    state = request.session.pop("oauth_state", None)
+
+    if not temp_secret_path:
+        print("Temporary client secret path not found")
+        messages.error(request, "Temporary client secret file not found.")
+        return redirect("home")
+
+    try:
+        flow = Flow.from_client_secrets_file(
+            temp_secret_path,
+            scopes=SCOPES,
+            redirect_uri="http://localhost:8000/oauth2callback",
+        )
+        flow.fetch_token(authorization_response=request.build_absolute_uri())
+        credentials = flow.credentials
+
+        # Use a session/user-specific ID for this example
+        user_id = request.session.session_key or "anonymous_user"
+
+        # Fetch and save steps data into the database
+        fetch_steps_data(credentials, user_id)
+        print("Steps data saved to database")
+        messages.success(request, "Steps data fetched and saved successfully!")
+    except Exception as e:
+        print(f"Error during OAuth callback: {e}")
+        messages.error(request, f"Error during OAuth callback: {e}")
+    finally:
+        if os.path.exists(temp_secret_path):
+            os.remove(temp_secret_path)
+
+    return redirect("home")
+
+
+def fetch_steps_data(credentials, user_id):
+    """Fetch steps data from Google Fit API and save unique entries to the database."""
+    start_time_str = "2024-11-01"
+    end_time_str = "2024-11-16"
+
+    # Convert to milliseconds since epoch
+    start_time_millis = int(time.mktime(time.strptime(start_time_str, "%Y-%m-%d")) * 1000)
+    end_time_millis = int(time.mktime(time.strptime(end_time_str, "%Y-%m-%d")) * 1000)
+
+    url = 'https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate'
+    headers = {'Authorization': f'Bearer {credentials.token}'}
+    body = {
+        "aggregateBy": [{
+            "dataTypeName": "com.google.step_count.delta",
+            "dataSourceId": "derived:com.google.step_count.delta:com.google.android.gms:merge_step_deltas"
+        }],
+        "bucketByTime": {"durationMillis": 86400000},  # Daily aggregation
+        "startTimeMillis": start_time_millis,
+        "endTimeMillis": end_time_millis
+    }
+
+    response = requests.post(url, headers=headers, json=body)
+    if response.status_code == 200:
+        data = response.json()
+        steps_to_create = []
+        existing_dates = set(
+            UserSteps.objects.filter(user_id=user_id).values_list("date", flat=True)
+        )  # Get all existing dates for this user
+
+        for bucket in data.get('bucket', []):
+            start_time = int(bucket['startTimeMillis']) // 1000
+            date = time.strftime('%Y-%m-%d', time.gmtime(start_time))
+            steps = sum(
+                point['value'][0]['intVal']
+                for dataset in bucket.get('dataset', [])
+                for point in dataset.get('point', [])
+            )
+            # Only add to list if date doesn't already exist in the database
+            if date not in existing_dates:
+                steps_to_create.append(UserSteps(user_id=user_id, date=date, steps=steps))
+
+        # Bulk insert non-duplicate entries
+        UserSteps.objects.bulk_create(steps_to_create, ignore_conflicts=True)
+        print(f"Steps successfully saved for user: {user_id}")
+    else:
+        print(f"Google Fit API error: {response.status_code} - {response.text}")
+        raise Exception(f"Error fetching data: {response.status_code} - {response.text}")
+
