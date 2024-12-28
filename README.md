@@ -1,9 +1,6 @@
 # Medical Personal Health Dashboard
 
-**Author(s):**  
-- Marij (Team Lead)  
-- Het  
-- George  
+**Authors:**   Marij Qureshi, Het Suhagiya, Georgios Gkakos
 
 ## Overview
 
