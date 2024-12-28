@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Health Dashboard</title>
+    {% load static %}
+    {% load plotly_dash %}
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        header {
+            display: flex;
+            flex-direction: row;
+            background-color: #4a90e2;
+            color: #fff;
+            padding: 10px;
+            align-items: center;
+        }
+
+        header div {
+            flex: 1;
+            padding: 0 10px;
+        }
+
+        #logo {
+            width: 100px;
+            height: 50px;
+            background-color: #337ab7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #main-content {
+            display: flex;
+            flex-direction: row;
+            width: 100%;
+            height: 100%;  // Makes sure it fills the vertical space of its container
+        }
+
+        #health-overview {
+            flex: 3;  // Adjust this ratio based on how much space you want it to take relative to other sections
+            display: flex;
+            flex-direction: column;
+            background-color: #5faee3;
+            padding: 20px;
+            overflow: hidden;  // Important to avoid internal scrolling within this div
+        }
+
+        #health-overview h2 {
+            color: #fff;
+            margin-bottom: 20px;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-row-gap: 20px;
+            grid-column-gap: 20px;
+            flex: 1; /* Ensure it grows to fill the available space */
+            overflow-y: auto; /* Add scroll if content overflows */
+        }
+
+        .chart-box {
+            flex-grow: 1;  // Ensures it takes all available space within its container
+            padding: 0;
+            margin: 0;
+            overflow: hidden;  // Ensures no scroll bars are visible
+        }
+        
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+
+        #chat-ai {
+            flex: 1;
+            background-color: #4a90e2;
+            padding: 20px;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #chat-ai h3 {
+            margin-top: 0;
+        }
+
+        #chat-ai .ai-section {
+            margin-bottom: 20px;
+        }
+
+        #data-connections {
+            background-color: #3f88c5;
+            padding: 20px;
+            color: #fff;
+            display: flex;
+            flex-direction: row;
+        }
+
+        .data-col {
+            flex: 1;
+            margin-right: 20px;
+        }
+
+        .data-col:last-child {
+            margin-right: 0;
+        }
+
+        .data-section {
+            background-color: #f7e488;
+            color: #000;
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .data-section h4 {
+            margin: 0 0 10px 0;
+        }
+
+        .data-section button,
+        #chat-ai button {
+            cursor: pointer;
+            padding: 5px 10px;
+            font-size: 14px;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+        }
+
+        .data-section button:hover,
+        #chat-ai button:hover {
+            background-color: #0056b3;
+        }
+
+        .data-section input {
+            width: 100%;
+            padding: 5px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        #chat-ai textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            font-size: 14px;
+            margin-bottom: 10px;
+            resize: none;
+        }
+
+        #ai-output {
+            background-color: #fff;
+            color: #000;
+            height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        /* Steps table styling */
+        table {
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+
+        th, td {
+            padding: 5px;
+            text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+    <header>
+        <div><h1>Health Dashboard</h1></div>
+        <div><h2>A personalized health data visualization and insights platform</h2></div>
+        <div id="logo">Logo</div>
+    </header>
+
+    <div id="main-content">
+        <div id="health-overview">
+            <h2>Health Overview</h2>
+            <div class="chart-box">
+                {% plotly_app name="health_charts_app_combined" ratio=1%} <!-- Combined 2x2 grid chart -->
+            </div>
+        </div>        
+
+        <div id="chat-ai">
+            <h3>Chat with AI</h3>
+            <div class="ai-section">
+                <h4>User Prompt</h4>
+                <textarea id="ai-prompt" placeholder="Ask a question (e.g., 'Summarize my weekly health insights')"></textarea>
+                <button onclick="getAIResponse()">Get Insights</button>
+            </div>
+            <div class="ai-section">
+                <h4>LLM Response (scrolling box)</h4>
+                <div id="ai-output"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="data-connections">
+        <div class="data-col">
+            <div class="data-section">
+                <h4>API connection</h4>
+                <p>Google Fit:</p>
+                <form method="POST" enctype="multipart/form-data" action="{% url 'upload_secret' %}">
+                    {% csrf_token %}
+                    <input type="file" name="client_secret" accept="application/json" required>
+                    <button type="submit">Sync</button>
+                </form>
+                <p>Apple Health: (placeholder)</p>
+                <input type="file" disabled>
+                <button disabled>Sync</button>
+                <p>Openrouter LLM:</p>
+                <form method="POST" action="{% url 'set_api_key' %}">
+                    {% csrf_token %}
+                    <input type="password" name="api_key" placeholder="Enter OpenRouter API Key" required>
+                    <button type="submit">Activate</button>
+                </form>
+            </div>
+
+            <div class="data-section">
+                <h4>File upload</h4>
+                <p>Upload CSV for sleep or other health data (placeholder)</p>
+                <input type="file" disabled>
+                <button disabled>Sync</button>
+
+                <h4>All tables (row counts) – scrolling box</h4>
+                <div style="background:#fff; color:#000; height:100px; overflow-y:auto; padding:5px;">
+                    <!-- Placeholder for database table listings -->
+                    <p>No data yet.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="data-col">
+            <div class="data-section">
+                <h4>Manual entry</h4>
+                <p>User input text field</p>
+                <input id="manual-input" type="text" placeholder="Enter weight or metric">
+                <button onclick="addManualEntry()">Input</button>
+                <button onclick="removeLastManualEntry()">Remove last row</button>
+                <h4>List all rows of manual input table (scrolling box)</h4>
+                <div style="background:#fff; color:#000; height:100px; overflow-y:auto; padding:5px;" id="manual-list">
+                    <!-- Dynamic entries here -->
+                </div>
+            </div>
+
+            <div class="data-section">
+                <h4>Steps Data Table</h4>
+                {% if steps_data %}
+                {{ steps_data|safe }}
+                {% else %}
+                <p>No steps data available yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getAIResponse() {
+            const prompt = document.getElementById('ai-prompt').value;
+            const output = document.getElementById('ai-output');
+            if (!prompt) {
+                output.innerText = 'Please enter a question.';
+                return;
+            }
+
+            fetch("{% url 'get_ai_response' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({ prompt })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    output.innerText = `Error: ${data.error}`;
+                } else {
+                    output.innerText = data.response;
+                }
+            })
+            .catch(err => {
+                output.innerText = `Request failed: ${err}`;
+            });
+        }
+
+        function addManualEntry() {
+            const val = document.getElementById('manual-input').value;
+            if(!val) return;
+            const list = document.getElementById('manual-list');
+            const p = document.createElement('p');
+            p.innerText = val;
+            list.appendChild(p);
+            document.getElementById('manual-input').value = '';
+        }
+
+        function removeLastManualEntry() {
+            const list = document.getElementById('manual-list');
+            if (list.lastChild) {
+                list.removeChild(list.lastChild);
+            }
+        }
+    </script>
+</body>
+</html>
