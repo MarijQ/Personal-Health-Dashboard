@@ -7,9 +7,9 @@
 This repository contains a **Medical Personal Health Dashboard** — a user-centric web app built with **Django** and integrated with **Plotly Dash** for real-time health data visualization. It aims to consolidate data from multiple health sources (Google Fit, manual inputs, and more) into a single, intuitive dashboard. Through the integrated **Generative AI** assistant, users can also query their data in natural language and receive insights or recommendations.
 
 This project was created as part of a collaborative initiative to demonstrate a broad range of data science and software engineering skills, including:
-- **Web App Development** (Django, Flask, Plotly Dash)
+- **Web App Development** (Django)
 - **Containerization & Deployment** (Docker)
-- **Data Visualization**
+- **Data Visualization** (Plotly Dash)
 - **Generative AI / LLM Integration** (Langchain-like flow, OpenRouter, GPT-based models)
 - **Data Structures & Algorithms** (Ingesting data efficiently, handling concurrency, etc.)
 
