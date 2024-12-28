@@ -220,6 +220,7 @@ Below is a summarized tree of the repository’s essential files and folders.
    - Add login/registration to store data per user in the DB more securely.
 4. **Kubernetes Deployment**  
    - Option to orchestrate multiple containers & scale horizontally.
+   - 
 
 ---
 
