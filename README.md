@@ -229,8 +229,8 @@ Below is a summarized tree of the repository’s essential files and folders.
 ## Team and Contact
 
 - **Marij**: MEng Aeronautical (Imperial), MSc Data Science (Brunel), ex-EY Parthenon
-- **Het**: MSc Data Science (Brunel)
-- **George**: MSc Data Science (Brunel)
+- **Het**: MSc Data Science (Brunel), BSc Information Technology 
+- **George**: MSc Data Science (Brunel), BSc Economics (AUTH)
 
 For questions, feel free to reach out via GitHub issues or email any of us.
 
