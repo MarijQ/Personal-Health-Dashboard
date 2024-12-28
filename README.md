@@ -233,4 +233,9 @@ For questions, feel free to reach out via GitHub issues or email any of us.
 
 ---
 
+## License
+This project is licensed under the MIT License. See the [LICENSE](License) file for more details.
+
+---
+
 > **Thank you for checking out our Medical Personal Health Dashboard!** If you have any questions or suggestions, please open an issue or contact us directly.
