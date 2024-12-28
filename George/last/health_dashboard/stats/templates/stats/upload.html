@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Dashboard</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            font-family: Arial, sans-serif;
+            margin: 0;
+        }
+
+        #main {
+            flex: 4;
+            padding: 20px;
+            background-color: #f4f4f4;
+            border-bottom: 1px solid #ccc;
+            text-align: center;
+        }
+
+        #content {
+            display: flex;
+            margin-top: 20px;
+            height: 80%;
+        }
+
+        #chart-area {
+            flex: 4;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-right: 1px solid #ccc;
+            text-align: center;
+        }
+
+        #sidebar {
+            flex: 1;
+            padding: 20px;
+            background-color: #e9ecef;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #sidebar section {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            border-radius: 5px;
+        }
+
+        h2 {
+            margin-bottom: 10px;
+        }
+
+        button {
+            cursor: pointer;
+            padding: 5px 10px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        input[type="file"],
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 5px;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        #ai-insights {
+            height: 150px;
+            background-color: #f4f4f4;
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #ccc;
+        }
+
+        #chat-input {
+            flex: 1;
+            padding-right: 10px;
+        }
+
+        #chat-output {
+            flex: 2;
+            padding-left: 10px;
+            border-left: 1px solid #ccc;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .example-text {
+            font-size: 14px;
+            color: gray;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="main">
+        <h1>Health Dashboard</h1>
+        <p>A personalized health data visualization and insights platform</p>
+        <div id="content">
+            <div id="chart-area">
+                <h2>Steps Data</h2>
+                {% if steps_data %}
+                {{ steps_data|safe }}
+                {% else %}
+                <p>No steps data available yet.</p>
+                {% endif %}
+            </div>
+            <div id="sidebar">
+                <!-- Steps API Input Section -->
+                <section>
+                    <h2>Sync Steps via Google Fit</h2>
+                    <form method="POST" enctype="multipart/form-data" action="{% url 'upload_secret' %}">
+                        {% csrf_token %}
+                        <input type="file" name="client_secret" accept="application/json" required>
+                        <button type="submit">Upload and Authorize</button>
+                    </form>
+                </section>
+
+                <!-- Sleep Data Upload Section -->
+                <section>
+                    <h2>Upload Sleep Records</h2>
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input type="file" name="csv_file" accept=".csv">
+                        <button type="submit">Upload and Sync</button>
+                    </form>
+                    {% if error %}
+                    <p style="color: red;">{{ error }}</p>
+                    {% endif %}
+                </section>
+
+                <!-- Manual Weight Input Section -->
+                <section>
+                    <h2>Enter Weight</h2>
+                    <form id="manual-weight-form" onsubmit="addWeightInput(event)">
+                        <input id="manual-weight" type="number" step="0.1" placeholder="Weight (kg)">
+                        <button type="submit">Add</button>
+                    </form>
+                    <div id="manual-display">
+                        <h4>Weight Log</h4>
+                        <ul id="manual-weight-list">
+                            <!-- Dynamic weight data -->
+                        </ul>
+                        <button onclick="removeLastWeight()">Remove Last</button>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Insights Section -->
+    <div id="ai-insights">
+        <div id="openrouter-setup">
+            <h4>OpenRouter API Setup</h4>
+            <form method="POST" action="{% url 'set_api_key' %}">
+                {% csrf_token %}
+                <input type="password" name="api_key" placeholder="Enter OpenRouter API Key" required>
+                <button type="submit">Activate</button>
+            </form>
+            <small>* Your key will be securely stored during this session.</small>
+            {% if api_key %}
+            <p><strong>API Key active</strong></p>
+            {% else %}
+            <p style="color: red;">No API Key configured. Activate to use AI Insights.</p>
+            {% endif %}
+        </div>
+
+        <div id="chat-input">
+            <h4>Ask AI Insights</h4>
+            <textarea id="ai-prompt"
+                placeholder="Ask a question (e.g., 'Summarize my weekly health insights')"></textarea>
+            <button onclick="getAIResponse()">Get Insights</button>
+        </div>
+        <div id="chat-output">
+            <h4>LLM Response</h4>
+            <div id="ai-output"
+                style="padding: 10px; background-color: #fff; border: 1px solid #ccc; height: 100px; overflow-y: auto;">
+                <!-- AI response will display here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getAIResponse() {
+            const prompt = document.getElementById('ai-prompt').value;
+            const output = document.getElementById('ai-output');
+            if (!prompt) {
+                output.innerText = 'Please enter a question.';
+                return;
+            }
+
+            // Send the user prompt to the server via a POST request
+            fetch("{% url 'get_ai_response' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({ prompt })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        output.innerText = `Error: ${data.error}`;
+                    } else {
+                        output.innerText = data.response;
+                    }
+                })
+                .catch(err => {
+                    output.innerText = `Request failed: ${err}`;
+                });
+        }
+    </script>
+</body>
+
+</html>
