@@ -220,7 +220,9 @@ Below is a summarized tree of the repository’s essential files and folders.
    - Add login/registration to store data per user in the DB more securely.
 4. **Kubernetes Deployment**  
    - Option to orchestrate multiple containers & scale horizontally.
-   - 
+5. **Improve UI/Visualisations**
+   - Prompt LLM to adjust the charts' features(eg. x/y axes, colours, ranges)
+   - Add dynamically loaded plots for the major concerns on the users' health data
 
 ---
 
