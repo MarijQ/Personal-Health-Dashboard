@@ -13,7 +13,7 @@ This project was created as part of a collaborative initiative to demonstrate a 
 - **Generative AI / LLM Integration** (Langchain-like flow, OpenRouter, GPT-based models)
 - **Data Structures & Algorithms** (Ingesting data efficiently, handling concurrency, etc.)
 
-> **Health Dashboard Screenshots:**:  
+> **Health Dashboard Screenshots:** 
 >![image](https://github.com/user-attachments/assets/6d91bd6c-8ed2-4734-9f30-a45f17bb5e09)
 >![image](https://github.com/user-attachments/assets/c63e2d6b-900d-49b7-a38b-398c37e77f64)
 
