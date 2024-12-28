@@ -13,8 +13,10 @@ This project was created as part of a collaborative initiative to demonstrate a 
 - **Generative AI / LLM Integration** (Langchain-like flow, OpenRouter, GPT-based models)
 - **Data Structures & Algorithms** (Ingesting data efficiently, handling concurrency, etc.)
 
-> **Placeholder for Image/GIF**:  
-> *Show a screenshot or animated GIF of the dashboard’s main page, highlighting the charts and AI assistant sidebar.*
+> **Health Dashboard Screenshots:**:  
+>![image](https://github.com/user-attachments/assets/6d91bd6c-8ed2-4734-9f30-a45f17bb5e09)
+>![image](https://github.com/user-attachments/assets/c63e2d6b-900d-49b7-a38b-398c37e77f64)
+
 
 ## Table of Contents
 
@@ -52,9 +54,6 @@ This project was created as part of a collaborative initiative to demonstrate a 
    - Quickly add custom health metrics (e.g., weight, mood, custom biomarkers) with a single-line input format.
    - Upload any CSV to automatically create (or update) a table in the integrated SQLite database.
 
-> **Placeholder for Image/GIF**:  
-> *Show a chart or screenshot focusing on the interactive elements (e.g., toggling chart lines or hover tooltips).*
-
 ---
 
 ## Architecture
@@ -72,9 +71,6 @@ Below is the high-level data flow:
    - Request is sent to the GPT-based model via **OpenRouter**, and the result is displayed back in the web app.
 5. **Docker**  
    - All services (Django, Plotly Dash, any microservices) run within Docker containers for portability.
-
-> **Placeholder for Diagram**:  
-> *Consider adding a system architecture diagram or flowchart. For instance, show how Django, Plotly, and the AI model communicate.*
 
 ---
 
@@ -143,12 +139,14 @@ Below is a summarized tree of the repository’s essential files and folders.
 
 1. **Build the Docker image**:  
    ```bash
-   docker build -t app-project-marij .
+   docker build -t health-dashboard .
    ```
 
 2. **Run the container**:  
    ```bash
-   docker run -p 8000:8000 -v "$(pwd):/app" app-project-marij
+   docker run -p 8000:8000 -v "$(pwd):/app" health-dashboard # Linux, MacOS
+   docker run -p 8000:8000 -v "'your_path_to_health_dashboard_project':/app" django-app # Windows
+   
    ```
    - Access the app at `http://localhost:8000`.
 
@@ -209,9 +207,6 @@ Below is a summarized tree of the repository’s essential files and folders.
 - **SQLite** (development DB)  
 - **OpenRouter** or GPT-based API  
 - **Google Fitness APIs**  
-
-> **Placeholder for Image**:  
-> *Consider placing team or project logos here.*  
 
 ---
 
