@@ -76,7 +76,7 @@ Below is the high-level data flow:
 
 ## Directory Structure
 
-Below is a summarized tree of the repository’s essential files and folders.  
+The final Django project is contained in the folder "health_dashboard". Below is a summarized tree of the project's essential files and folders.  
 
 ```
 ├── requirements.txt          # Python dependencies
@@ -99,13 +99,11 @@ Below is a summarized tree of the repository’s essential files and folders.
 │   │       └── dashboard.html
 │   └── migrations/
 │       └── ...
-├── Archive/                  # Legacy or experimental code
 ├── health_dashboard/         # Django project settings, URLs, WSGI, etc.
-│   ├── settings.py
-│   ├── urls.py
-│   ├── wsgi.py
-│   └── ...
-└── README.md                 # This file!
+    ├── settings.py
+    ├── urls.py
+    ├── wsgi.py
+    └── ...
 ```
 
 ---
