@@ -39,9 +39,9 @@ This project was created as part of a collaborative initiative to demonstrate a 
 
 ## Features
 
-1. **Centralized Health Data**  
+1. **Centralised Health Data**  
    - Aggregate data from **Google Fit** and other sources via CSV uploads or manual input.
-   - Visualize your steps, heart rate, calories, sleep patterns, and more in a single place.
+   - Visualise your steps, heart rate, calories, sleep patterns, and more in a single place.
 
 2. **Interactive Dashboards**  
    - Real-time plots and charts built with **Plotly** and embedded via **Django Plotly Dash**.
@@ -51,8 +51,8 @@ This project was created as part of a collaborative initiative to demonstrate a 
    - Powered by GPT-based models through **OpenRouter**.
    - Ask natural language questions about your stored health metrics, table structures, or summaries, and receive relevant insights.
 
-4. **Modular & Containerized**  
-   - Fully containerized with Docker, ensuring consistent behavior across development, staging, and production environments.
+4. **Modular & Containerised**  
+   - Fully containerised with Docker, ensuring consistent behavior across development, staging, and production environments.
    - Potential for scaling with Docker Compose or Kubernetes.
 
 5. **Manual Input & CSV Table Creation**  
@@ -81,7 +81,7 @@ Below is the high-level data flow:
 
 ## Directory Structure
 
-The final Django project is contained in the folder "health_dashboard". Below is a summarized tree of the project's essential files and folders.  
+The final Django project is contained in the folder "health_dashboard". Below is a summarised tree of the project's essential files and folders.  
 
 ```
 ├── requirements.txt          # Python dependencies
@@ -193,7 +193,7 @@ The final Django project is contained in the folder "health_dashboard". Below is
 
 4. **AI Assistant**  
    - Enter your **OpenRouter** API Key (or another GPT-based key if integrated).  
-   - Ask questions like “What’s my average step count over the last 7 days?” or “Summarize my heart rate trends.”  
+   - Ask questions like “What’s my average step count over the last 7 days?” or “Summarise my heart rate trends.”  
    - The system sends relevant DB context plus your prompt to the LLM, returning a natural language answer.
 
 5. **Database Management**  
