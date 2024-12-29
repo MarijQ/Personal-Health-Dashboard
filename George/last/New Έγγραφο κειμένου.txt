@@ -1,0 +1,1 @@
+docker run -p 8000:8000 -v "C:/Users/ggeor/Desktop/Group Projects/Health-Dashboard-2/George/health_dashboard:/app" django-app 
