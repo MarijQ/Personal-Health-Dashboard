@@ -1,12 +1,5 @@
 # Medical Personal Health Dashboard
 
-> ### Note: Archived Repository
-> This repository represents the completed version of the project (as of 29/12/2024) collaboratively built by:
-> 
-> [Marij Qureshi](https://github.com/MarijQ), [Georgios Gkakos](https://github.com/GGkakos), [Het Suhagiya](https://github.com/HetSuhagiya)
-> 
-> This repository is no longer actively maintained. Please see individual forks for the most up-to-date versions.
-
 ## Overview
 
 This repository contains a **Medical Personal Health Dashboard** — a user-centric web app built with **Django** and integrated with **Plotly Dash** for real-time health data visualization. It aims to consolidate data from multiple health sources (Google Fit, manual inputs, and more) into a single, intuitive dashboard. Through the integrated **Generative AI** assistant, users can also query their data in natural language and receive insights or recommendations.
