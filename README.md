@@ -1,20 +1,23 @@
 # Medical Personal Health Dashboard
 
-## Overview
+## Overview  
 
-This repository contains a **Medical Personal Health Dashboard** — a user-centric web app built with **Django** and integrated with **Plotly Dash** for real-time health data visualization. It aims to consolidate data from multiple health sources (Google Fit, manual inputs, and more) into a single, intuitive dashboard. Through the integrated **Generative AI** assistant, users can also query their data in natural language and receive insights or recommendations.
+The **Medical Personal Health Dashboard** is a _fully private_, personal health tracking app that brings together all your health data in one place. Unlike typical fitness apps or talking to an LLM chatbot, it is designed to:  
 
-This project was created as part of a collaborative initiative to demonstrate a broad range of data science and software engineering skills, including:
-- **Web App Development** (Django)
-- **Containerization & Deployment** (Docker)
-- **Data Visualization** (Plotly Dash)
-- **Generative AI / LLM Integration** (Langchain-like flow, OpenRouter, GPT-based models)
-- **Data Structures & Algorithms** (Ingesting data efficiently, handling concurrency, etc.)
+- **Work with any structured or unstructured health data** – Sync with Google Fit, manually log custom health metrics, or upload structured data like CSVs or medical reports.  
+- **Use AI to give personalised insights** – An AI assistant connects scattered health metrics, identifies patterns, and provides tailored summaries and recommendations based on _your actual tracked data_.  
+- **Stay fully private & local** – Your health data is processed and stored only on your machine, ensuring complete privacy without reliance on third-party cloud services.  
 
-> **Health Dashboard Screenshots:** 
+Behind the scenes, this project brings together modern technologies to deliver a fully functional demonstration of robust data processing, app development, and AI integration capabilities:  
+
+- **Django/SQL Backend** – Processes and stores health data.  
+- **Plotly Dash** – Creates dynamic, real-time visualisations.  
+- **Generative AI** – Uses OpenRouter to generate insights from 300+ LLM models.  
+- **Docker** – Ensures smooth deployment across different environments.  
+
+> **Screenshots:** 
 >![image](https://github.com/user-attachments/assets/6d91bd6c-8ed2-4734-9f30-a45f17bb5e09)
 >![image](https://github.com/user-attachments/assets/c63e2d6b-900d-49b7-a38b-398c37e77f64)
-
 
 ## Table of Contents
 
@@ -234,7 +237,3 @@ For questions, feel free to reach out via GitHub issues or email any of us.
 
 ## License
 This project is licensed under the MIT License. See the [LICENSE](License) file for more details.
-
----
-
-> **Thank you for checking out our Medical Personal Health Dashboard!** If you have any questions or suggestions, please open an issue or contact us directly.
